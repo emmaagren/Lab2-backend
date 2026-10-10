@@ -29,7 +29,7 @@ app.get("/api/workexperience", async (requestAnimationFrame, res) => {
 // Starta servern och anslut till databasen
 async function startServer() {
     try {
-        const db =await initDatabase();
+        const db = await initDatabase();
         app.locals.db = db;
 
         app.listen(PORT, () => {
@@ -40,5 +40,66 @@ async function startServer() {
         console.error("Kunde inte starta servern:", error);
     }
 }
+
+// Lägg till en ny arbetslivserfarenhet
+app.post("/api/workexperience", async (req, res) => {
+    const {
+        companyname,
+        jobtitle,
+        location,
+        startdate,
+        enddate,
+        description
+    } = req.body || {};
+
+    // Kontrollera att alla fält innehåller text
+    const fields = {
+        companyname,
+        jobtitle,
+        location,
+        startdate,
+        enddate,
+        description
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+        if (typeof value !== "string" || !value.trim()) {
+            return res.status(400).json({
+                error: `Fältet ${key} måste fyllas i.`
+            });
+        }
+    }
+
+
+    try {
+        const db = app.locals.db;
+
+        const result = await db.run(
+            `INSERT INTO workexperience
+        (companyname, jobtitle, location, startdate, enddate, description)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                companyname.trim(),
+                jobtitle.trim(),
+                location.trim(),
+                startdate.trim(),
+                enddate.trim(),
+                description.trim()
+            ]
+        );
+
+        res.status(201).json({
+            message: "Arbetslivserfarenheten har lagts till.",
+            id: result.lasID
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            error: "Kunde inte spara arbetsplatslivserfarenheten."
+        });
+    }
+});
 
 startServer();
