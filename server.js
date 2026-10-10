@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(cors());
 
 // Hämta alla arbetslivserfarenheter
-app.get("/api/workexperience", async (requestAnimationFrame, res) => {
+app.get("/api/workexperience", async (req, res) => {
     try {
         const db = app.locals.db;
         const experiences = await db.all(
@@ -90,7 +90,7 @@ app.post("/api/workexperience", async (req, res) => {
 
         res.status(201).json({
             message: "Arbetslivserfarenheten har lagts till.",
-            id: result.lasID
+            id: result.lastID
         });
 
     } catch (error) {
@@ -98,6 +98,85 @@ app.post("/api/workexperience", async (req, res) => {
 
         res.status(500).json({
             error: "Kunde inte spara arbetsplatslivserfarenheten."
+        });
+    }
+});
+
+// Uppdatera en befintlig arbetslivserfarenhet
+app.put("/api/workexperience/:id", async (req, res) => {
+    const id = Number(req.params.id);
+
+    // Kontrollera att ID är giltigt
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({
+            error: "Ogiltigt ID."
+        });
+    }
+    const {
+        companyname,
+        jobtitle,
+        location,
+        startdate,
+        enddate,
+        description
+    } = req.body || {};
+
+    // Validera alla fält
+    const fields = {
+        companyname,
+        jobtitle,
+        location,
+        startdate,
+        enddate,
+        description
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+        if (typeof value !== "string" || !value.trim()) {
+            return res.status(400).json({
+                error: `Fältet ${key} måste fyllas i.`
+            });
+        }
+    }
+
+    try {
+        const db = app.locals.db;
+
+        const result = await db.run(
+            `UPDATE workexperience
+            SET companyname = ?,
+            jobtitle = ?,
+            location = ?,
+            startdate = ?,
+            enddate = ?,
+            description = ?
+            WHERE id = ?`,
+            [
+                companyname.trim(),
+                jobtitle.trim(),
+                location.trim(),
+                startdate.trim(),
+                enddate.trim(),
+                description.trim(),
+                id
+            ]
+        );
+
+        // Kontrollera om posten finns
+        if (result.changes === 0) {
+            return res.status(404).json({
+                error: "Arbetslivserfarenheten hittades inte."
+            });
+        }
+
+        res.status(200).json({
+            message: "Arbetslivserfarenheten har uppdaterats."
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            error: "Kunde inte uppdatera arbetslivserfarenheten."
         });
     }
 });
