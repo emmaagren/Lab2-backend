@@ -181,4 +181,43 @@ app.put("/api/workexperience/:id", async (req, res) => {
     }
 });
 
+// Radera en arbetslivserfarenhet
+app.delete("/api/workexperience/:id", async (req, res) => {
+    const id = Number(req.params.id);
+
+    // Kontrollera att ID är giltigt
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({
+            error: "Ogiltigt ID."
+        });
+    }
+
+    try {
+        const db = app.locals.db;
+
+        const result = await db.run(
+            "DELETE FROM workexperience WHERE id = ?",
+            [id]
+        );
+
+        // Kontrollera om posten finns
+        if (result.changes === 0) {
+            return res.status(404).json({
+                error: "Arbetslivserfarenheten hittades inte."
+            });
+        }
+
+        res.status(200).json({
+            message: "Arbetslivserfarenheten har raderats."
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            error: "Kunde inte radera arbetslivserfarenheten."
+        });
+    }
+});
+
+// Starta servern
 startServer();
