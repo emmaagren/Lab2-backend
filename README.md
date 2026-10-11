@@ -37,6 +37,13 @@ node server.js
 
 Servern körs lokalt på `http://localhost:3000`.
 
+## Publicerad webbtjänst
+
+API:et är publicerat på Render.
+
+**API-adress:**
+https://lab2-workexperience-api.onrender.com/api/workexperience
+
 ## API-endpoints
 
 | Metod | URI | Beskrivning |
